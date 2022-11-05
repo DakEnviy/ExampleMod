@@ -71,7 +71,7 @@ def resourcesDir = "src/main/resources"
 
 def javaPackage = "${javaSourceDir}/${modGroup.replaceAll("\\.", "/")}"
 
-if (!getFile(javaPackage).exists()) {
+if (!file(javaPackage).exists()) {
     throw new GradleException("Could not resolve \"modGroup\"! Could not find ${javaPackage}")
 }
 
@@ -81,9 +81,9 @@ def mixinPackagePath = "${javaPackage}/asm/mixins"
 def mixinConfigPath = "${resourcesDir}/mixins.${modId}.json"
 def pluginPath = "${javaPackage}/${modName}Plugin.java"
 
-def hasAt = getFile(atPath).exists()
-def hasMixins = getFile(mixinPackagePath).exists()
-def hasPlugin = getFile(pluginPath).exists() || hasMixins
+def hasAt = file(atPath).exists()
+def hasMixins = file(mixinPackagePath).exists()
+def hasPlugin = file(pluginPath).exists() || hasMixins
 
 if (hasMixins) {
     initMixinConfig(mixinConfigPath)
@@ -91,6 +91,10 @@ if (hasMixins) {
 
     // Apply third-party configuration for mixins
     apply from: "https://raw.githubusercontent.com/tox1cozZ/mixin-booter-legacy/master/gradle/configurations/v1.gradle"
+}
+
+if (file("addon.gradle").exists()) {
+    apply from: "addon.gradle"
 }
 
 repositories {
@@ -236,7 +240,7 @@ publishing {
 
                 def pomNode = asNode()
 
-                pomNode.dependencies.'*'.findAll() {
+                pomNode.dependencies."*".findAll() {
                     badArtifacts[it.groupId.text()].contains(it.artifactId.text())
                 }.each() {
                     it.parent().remove(it)
@@ -278,12 +282,8 @@ def checkPropertyExists(String propertyName) {
     }
 }
 
-def getFile(String relativePath) {
-    return new File(projectDir, relativePath)
-}
-
 def initMixinConfig(String filepath) {
-    def mixinConfigFile = getFile(filepath)
+    def mixinConfigFile = file(filepath)
 
     if (!mixinConfigFile.exists()) {
         mixinConfigFile.text = """{
@@ -304,7 +304,7 @@ def initMixinConfig(String filepath) {
 }
 
 def initPluginForMixin(String filepath, String modGroup) {
-    def pluginFile = getFile(filepath)
+    def pluginFile = file(filepath)
 
     if (!pluginFile.exists()) {
         pluginFile.text = """package ${modGroup};
