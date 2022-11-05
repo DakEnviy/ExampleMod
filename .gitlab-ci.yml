@@ -1,0 +1,12 @@
+stages:
+  - deploy
+
+publish:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  image: gradle:7.5.1-jdk8
+  variables:
+    PRODUCTION: 1
+  script:
+    - gradle publish
