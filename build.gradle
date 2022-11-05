@@ -212,8 +212,10 @@ processResources {
     }
 }
 
-// Workaround variable hiding in pom processing
-def projectConfigurations = project.configurations
+// Disable generating module file because it has broken dependencies
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
+}
 
 publishing {
     publications {
@@ -225,15 +227,7 @@ publishing {
 
             // remove extra garbage from minecraft and minecraftDeps configuration
             pom.withXml {
-                def badArtifacts = [:].withDefault { [] as Set<String> }
-
-                for (configuration in [projectConfigurations.minecraft, projectConfigurations.minecraftDeps]) {
-                    for (dependency in configuration.allDependencies) {
-                        if (dependency.group != null) {
-                            badArtifacts[dependency.group] += dependency.name
-                        }
-                    }
-                }
+                def minecraftDependencies = getMinecraftDependencies()
 
                 // example for specifying extra stuff to ignore
                 // badArtifacts["org.example.group"] += "artifactName"
@@ -241,7 +235,7 @@ publishing {
                 def pomNode = asNode()
 
                 pomNode.dependencies."*".findAll() {
-                    badArtifacts[it.groupId.text()].contains(it.artifactId.text())
+                    minecraftDependencies[it.groupId.text()].contains(it.artifactId.text())
                 }.each() {
                     it.parent().remove(it)
                 }
@@ -258,7 +252,7 @@ publishing {
 
         if (publishToGitlab.toBoolean() && serverUrl != null && projectId != null && jobToken != null) {
             maven {
-                name "GitlabPackages"
+                name "GitLab"
                 url "${serverUrl}/api/v4/projects/${projectId}/packages/maven"
 
                 credentials(HttpHeaderCredentials) {
@@ -280,6 +274,18 @@ def checkPropertyExists(String propertyName) {
     if (!project.hasProperty(propertyName)) {
         throw new GradleException("This project requires a property \"${propertyName}\"! Please add it to your \"gradle.properties\"")
     }
+}
+
+def getMinecraftDependencies() {
+    def result = [:].withDefault { [] as Set<String> }
+
+    for (configuration in [configurations.minecraft, configurations.minecraftDeps]) {
+        for (dependency in configuration.allDependencies) {
+            result[dependency.group == null ? "" : dependency.group] += dependency.name
+        }
+    }
+
+    return result
 }
 
 def initMixinConfig(String filepath) {
