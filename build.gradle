@@ -1,4 +1,4 @@
-// version: 5
+// version: 6
 /*
     DO NOT CHANGE THIS FILE!
     Also, you may replace this file at any time if there is an update available.
@@ -58,7 +58,7 @@ checkPropertyExists("publishToGitlab")
 
 def isDev = System.getenv("PRODUCTION") == null
 
-version = "${versionMajor}.${versionMinor}.${versionPatch}"
+version = "${minecraftVersion}-${versionMajor}.${versionMinor}.${versionPatch}"
 group = modGroup
 archivesBaseName = modId
 
