@@ -9,4 +9,4 @@ publish:
   variables:
     PRODUCTION: 1
   script:
-    - gradle publish
+    - gradle setupCIWorkspace build publish
